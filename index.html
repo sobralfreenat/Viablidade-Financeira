@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise de Viabilidade Financeira</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid black;
+        }
+
+        th,
+        td {
+            padding: 8px 12px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>Análise de Viabilidade Financeira</h2>
+    <p></p>
+    <label for="tipoPE">Selecione o tipo de Ponto de Equilíbrio:</label>
+    <select id="tipoPE">
+
+
+        <option value="pec">Ponto de Equilíbrio Contábil (PEC)</option>
+        <option value="pef">Ponto de Equilíbrio Financeiro (PEF)</option>
+        <option value="current">Método Atual</option>
+
+
+
+    </select>
+
+    <label for="numMeses">Selecione o número de meses:</label>
+    <select id="numMeses" onchange="calculate()">
+        <option value="1">1 mês</option>
+        <option value="3">3 meses</option>
+        <option value="6">6 meses</option>
+        <option value="12">12 meses</option>
+    </select>
+
+
+
+    <label for="lucroDesejado">Percentual de Lucro Desejado (%):</label>
+    <input type="number" id="lucroDesejado" value="30" onchange="calculate()">
+
+    <p id="explanation"></p>
+
+    <table>
+
+        <tr>
+            <th>Descrição</th>
+            <th>Valor</th>
+        </tr>
+        <!-- Custos Fixos -->
+        <tr>
+            <td>Aluguel de escritório</td>
+            <td><input type="number" id="aluguel" onchange="calculate()"></td>
+        </tr>
+        <tr>
+            <td>Salários da equipe</td>
+            <td><input type="number" id="salarios" onchange="calculate()"></td>
+        </tr>
+        <tr>
+            <td>Custos com Ferramentas</td>
+            <td><input type="number" id="ferramentas" onchange="calculate()"></td>
+        </tr>
+        <!-- Atividades Chave -->
+        <tr>
+            <td>Marketing (Parceiro Chave)</td>
+            <td><input type="number" id="marketing" onchange="calculate()"></td>
+        </tr>
+        <tr>
+            <td>Desenvolvimento de Produto</td>
+            <td><input type="number" id="produto" onchange="calculate()"></td>
+        </tr>
+        <!-- Custos Variáveis -->
+        <tr>
+            <td>Comissões de vendas</td>
+            <td><input type="number" id="comissoes" onchange="calculate()"></td>
+        </tr>
+        <tr>
+            <td>Custo de aquisição de cliente</td>
+            <td><input type="number" id="aquisicao" onchange="calculate()"></td>
+        </tr>
+        <tr>
+            <td>Custos com Parceiros (Designers, Consultores, etc)</td>
+            <td><input type="number" id="parceiros" onchange="calculate()"></td>
+        </tr>
+        <!-- Amortização e Depreciação -->
+        <tr>
+            <td>Computador (Amortização)</td>
+            <td><input type="number" id="computador" onchange="calculate()"></td>
+        </tr>
+        <tr>
+            <td>Celular (Amortização)</td>
+            <td><input type="number" id="celular" onchange="calculate()"></td>
+        </tr>
+        <!-- Receitas -->
+        <tr>
+            <td>Receita Cliente Colaborativo</td>
+            <td><input type="number" id="receitaColaborativo" onchange="calculate()"></td>
+        </tr>
+        <tr>
+            <td>Receita Cliente Dependente Digital</td>
+            <td><input type="number" id="receitaDependente" onchange="calculate()"></td>
+        </tr>
+        <tr>
+
+            <tr>
+                <td>Período</td>
+                <td><input type="number" id="periodoDependente" onchange="calculate()"></td>
+            </tr>
+
+
+            <!-- Prospecção Ativa -->
+            <tr>
+                <td>Custo com Leads B2B</td>
+                <td><input type="number" id="leadsB2B" onchange="calculate()"></td>
+            </tr>
+            <tr>
+                <td>Custo com Anúncios Tráfego Pago</td>
+                <td><input type="number" id="trafegoPago" onchange="calculate()"></td>
+            </tr>
+            <!-- Totais e Métricas -->
+            <tr>
+                <td><strong>Lucro/Prejuízo</strong></td>
+                <td><span id="lucroPrejuizo">0</span></td>
+            </tr>
+            <tr>
+                <td><strong>Margem de Lucro (%)</strong></td>
+                <td><span id="margemLucro">0</span></td>
+            </tr>
+            <tr>
+                <td><strong>Total de Custos</strong></td>
+                <td><span id="totalCustos">0</span></td>
+            </tr>
+            <tr>
+                <td><strong>Total de Receitas</strong></td>
+                <td><span id="totalReceitas">0</span></td>
+            </tr>
+            <tr>
+                <td><strong>Ponto de Equilíbrio</strong></td>
+                <td><span id="pontoEquilibrio">0</span></td>
+            </tr>
+
+            <tr>
+                <td><strong>Ticket Médio Requerido</strong></td>
+                <td><span id="ticketMedioRequerido">0</span></td>
+
+            </tr>
+
+    </table>
+
+    <h2>Gráfico de Projeção (Desabilitado)</h2>
+    <canvas id="graficoLucro"></canvas>
+
+    <script>
+        function getValor(id) {
+            return parseFloat(document.getElementById(id).value) || 0;
+        }
+
+        function setTexto(id, valor) {
+            document.getElementById(id).innerText = valor;
+        }
+
+        const idsCustos = ['aluguel', 'salarios', 'ferramentas', 'marketing', 'produto', 'comissoes', 'aquisicao', 'parceiros', 'computador', 'celular', 'leadsB2B', 'trafegoPago'];
+        const idsReceitas = ['receitaColaborativo', 'receitaDependente'];
+
+        const tipoPE = document.getElementById("tipoPE");
+        tipoPE.addEventListener("change", calculate);
+
+        function showExplanation() {
+            let explanation = "";
+
+            switch (tipoPE.value) {
+                case 'pec':
+                    explanation = "Ponto de Equilíbrio Contábil (PEC) considera todos os custos e despesas fixas e variáveis.";
+                    break;
+                case 'pef':
+                    explanation = "Ponto de Equilíbrio Financeiro (PEF) leva em conta apenas os desembolsos, sem considerar as depreciações e amortizações.";
+                    break;
+                case 'current':
+                    explanation = "Método Atual não segue os padrões contábeis ou financeiros tradicionais.";
+                    break;
+            }
+
+            setTexto("explanation", explanation);
+        }
+
+        // Configuração do gráfico fora da função calculate
+        let ctx = document.getElementById('graficoLucro').getContext('2d');
+        let graficoLucro;
+
+        function configurarGrafico(periodo) {
+            if (graficoLucro) {
+                graficoLucro.destroy(); // Destruir o gráfico anterior para evitar sobreposições
+            }
+
+            let lucroPrejuizoData = [];
+
+            for (let i = 1; i <= periodo; i++) {
+                // Cálculo do lucro/prejuízo para cada mês
+                let lucroPrejuizoMensal = (totalReceitas - totalCustos) * i - totalCustos;
+                lucroPrejuizoData.push(lucroPrejuizoMensal.toFixed(2));
+            }
+
+            graficoLucro = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({ length: periodo }, (_, i) => `Mês ${i + 1}`),
+                    datasets: [{
+                        label: 'Lucro/Prejuízo Mensal',
+                        data: lucroPrejuizoData,
+                        borderColor: 'blue',
+                        backgroundColor: 'rgba(0, 0, 255, 0.1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true
+                }
+            });
+        }
+
+        function calculate() {
+            showExplanation();
+
+            // Utilizando a função getValor
+            let lucroDesejado = getValor('lucroDesejado') / 100;
+            let periodoDependente = getValor('numMeses') || 1; // Use o valor selecionado no novo campo
+
+            let totalCustos = 0;
+            let totalReceitas = 0;
+
+            for (let id of idsCustos) {
+                totalCustos += parseFloat(document.getElementById(id).value) || 0;
+            }
+
+            for (let id of idsReceitas) {
+                totalReceitas += parseFloat(document.getElementById(id).value) || 0;
+            }
+
+            let lucroPrejuizo = totalReceitas - totalCustos;
+            let margemLucro = (lucroPrejuizo / totalReceitas) * 100;
+            let pontoEquilibrio;
+
+            switch (tipoPE.value) {
+                case 'pec':
+                    // PEC considera todos os custos e despesas
+                    pontoEquilibrio = totalCustos / (totalReceitas * periodoDependente);
+                    break;
+                case 'pef':
+                    // PEF desconsidera depreciações e amortizações (por exemplo, computador e celular)
+                    let custoSemDepreciacao = totalCustos - (parseFloat(document.getElementById('computador').value) || 0) - (parseFloat(document.getElementById('celular').value) || 0);
+                    pontoEquilibrio = custoSemDepreciacao / (totalReceitas * periodoDependente);
+                    break;
+                default:
+                    let margemContribuicao = (totalReceitas - totalCustos) / totalReceitas;
+                    pontoEquilibrio = totalCustos / (margemContribuicao * periodoDependente);
+                    break;
+            }
+
+            // Após calcular o pontoEquilibrio, você deve calcular o ticketMedioRequerido:
+            let ticketMedioRequerido = totalCustos / (1 - lucroDesejado);
+
+            setTexto("lucroPrejuizo", lucroPrejuizo.toFixed(2));
+            setTexto("margemLucro", margemLucro.toFixed(2) + '%');
+            setTexto("totalCustos", totalCustos.toFixed(2));
+            setTexto("totalReceitas", totalReceitas.toFixed(2));
+            setTexto("pontoEquilibrio", pontoEquilibrio.toFixed(2));
+            setTexto("ticketMedioRequerido", ticketMedioRequerido.toFixed(2));
+
+            // Atualizar o gráfico com o novo período
+            configurarGrafico(periodoDependente);
+        }
+
+        // Passo 1: Atualização Automática
+        document.getElementById('lucroDesejado').addEventListener('change', calculate);
+        document.getElementById('periodoDependente').addEventListener('change', calculate);
+
+        // Inicializar cálculo quando a página carrega
+        calculate();
+
+    </script>
+
+
+</body>
+
+</html>
