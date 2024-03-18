@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Análise de Viabilidade Financeira</title>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Importando a biblioteca Plotly -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
     <style>
         table {
             width: 100%;
@@ -149,8 +151,8 @@
         </tr>
     </table>
 
-    <h2>Gráfico de Projeção (Desabilitado)</h2>
-    <canvas id="graficoLucro"></canvas>
+    <h2>Gráfico de Projeção</h2>
+    <div id="graficoLucro"></div>
 
     <!-- Botões para salvar e carregar estado -->
     <div style="text-align: center;">
@@ -190,48 +192,6 @@
             }
 
             setTexto("explanation", explanation);
-        }
-
-        // Configuração do gráfico fora da função calculate
-        let ctx = document.getElementById('graficoLucro').getContext('2d');
-        let graficoLucro;
-
-        function configurarGrafico(periodo) {
-            if (graficoLucro) {
-                graficoLucro.destroy(); // Destruir o gráfico anterior para evitar sobreposições
-            }
-
-            let lucroPrejuizoData = [];
-
-            for (let i = 1; i <= periodo; i++) {
-                // Cálculo do lucro/prejuízo para cada mês
-                let lucroPrejuizoMensal = (totalReceitas - totalCustos) * i - totalCustos;
-                lucroPrejuizoData.push(lucroPrejuizoMensal.toFixed(2));
-            }
-
-            graficoLucro = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: Array.from({ length: periodo }, (_, i) => `Mês ${i + 1}`),
-                    datasets: [{
-                        label: 'Lucro/Prejuízo Mensal',
-                        data: lucroPrejuizoData,
-                        borderColor: 'blue',
-                        backgroundColor: 'rgba(0, 0, 255, 0.1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true
-                }
-            });
-        }
-
-        function calcularCenario() {
-            // Função para calcular o cenário
-            calculate();
-            configurarGrafico(getValor('numMeses'));
         }
 
         function calculate() {
@@ -341,10 +301,28 @@
             reader.readAsText(file);
         }
 
-        // Passo 1: Atualização Automática
-        document.getElementById('lucroDesejado').addEventListener('change', calculate);
-        document.getElementById('numMeses').addEventListener('change', calculate);
-        document.getElementById('periodoDependente').addEventListener('change', calculate);
+        function configurarGrafico(periodo) {
+            let x = Array.from({ length: periodo }, (_, i) => `Mês ${i + 1}`);
+            let y = Array.from({ length: periodo }, () => Math.random() * 1000); // Dados fictícios
+
+            let data = [{
+                x: x,
+                y: y,
+                type: 'line'
+            }];
+
+            let layout = {
+                title: 'Projeção de Lucro',
+                xaxis: {
+                    title: 'Mês'
+                },
+                yaxis: {
+                    title: 'Lucro'
+                }
+            };
+
+            Plotly.newPlot('graficoLucro', data, layout);
+        }
 
         // Inicializar cálculo quando a página carrega
         calculate();
@@ -353,6 +331,3 @@
 </body>
 
 </html>
-
-
-
